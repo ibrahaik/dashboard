@@ -18,6 +18,10 @@ const routes: Array<RouteRecordRaw> = [
     path: "/kpis",
     component: () => import("../views/KPIDashboard.vue"),
   },
+  {
+    path: "/objetivos",
+    component: () => import("../views/SmartObjectives.vue"),
+  },
 ]
 
 const router = createRouter({

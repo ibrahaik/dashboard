@@ -7,7 +7,6 @@
             <ion-list-header>Dashboard</ion-list-header>
             <ion-note>Data Visualization</ion-note>
 
-
             <ion-menu-toggle :auto-hide="false" v-for="(p, i) in appPages" :key="i">
               <ion-item @click="selectedIndex = i" router-direction="root" :router-link="p.url" lines="none" :detail="false" class="hydrated" :class="{ selected: selectedIndex === i }">
                 <ion-icon aria-hidden="true" slot="start" :ios="p.iosIcon" :md="p.mdIcon"></ion-icon>
@@ -22,15 +21,19 @@
   </ion-app>
 </template>
 
-
 <script setup lang="ts">
-import { IonApp, IonContent, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonMenu, IonMenuToggle, IonNote, IonRouterOutlet, IonSplitPane,} from '@ionic/vue';
-import { rocketOutline, rocketSharp, pulseOutline, pulseSharp, speedometerOutline, speedometerSharp } from 'ionicons/icons';
-import { ref, onMounted, watch } from 'vue';
+import { IonApp, IonContent, IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonMenu, IonMenuToggle, IonNote, IonRouterOutlet, IonSplitPane } from '@ionic/vue';
+import { 
+  rocketOutline, rocketSharp, 
+  pulseOutline, pulseSharp, 
+  speedometerOutline, speedometerSharp,
+  trophyOutline, trophySharp
+} from 'ionicons/icons';
+import { ref, onMounted, watch, computed } from 'vue';
 import { useRoute } from 'vue-router';
 
+const route = useRoute();
 
-const selectedIndex = ref(0);
 const appPages = [
   {
     title: 'Negocio',
@@ -50,52 +53,37 @@ const appPages = [
     iosIcon: speedometerOutline,
     mdIcon: speedometerSharp,
   },
+  {
+    title: 'Objetivos SMART',
+    url: '/objetivos',
+    iosIcon: trophyOutline,
+    mdIcon: trophySharp,
+  },
 ];
 
 
 
+const currentPath = computed(() => route.path);
+const selectedIndex = ref(appPages.findIndex(page => page.url === currentPath.value));
 
-const route = useRoute();
+watch(currentPath, () => {
+  selectedIndex.value = appPages.findIndex(page => page.url === currentPath.value);
+});
 
-
-/********************************************************************** */
-// 🔄 Función para actualizar el `selectedIndex` según la URL actual
-
-
-const updateSelectedIndex = () => {
-  const currentPath = route.path;
-  const index = appPages.findIndex(page => page.url === currentPath);
-  if (index !== -1) {
-    selectedIndex.value = index;
-  }
-};
-
-
-// Ejecutar cuando la app carga
-onMounted(updateSelectedIndex);
-
-
-// Ejecutar cada vez que cambia la ruta
-watch(route, updateSelectedIndex);
-/********************************************************************** */
-
-
+onMounted(() => {
+  selectedIndex.value = appPages.findIndex(page => page.url === currentPath.value);
+});
 </script>
 
-
 <style scoped>
-
-
 ion-split-pane {
     /*--side-width: 350px;*/
     --side-max-width: 280px;
 }
 
-
 ion-menu ion-content {
   --background: var(--ion-item-background, var(--ion-background-color, #fff));
 }
-
 
 ion-menu.md ion-content {
   --padding-start: 8px;
@@ -104,50 +92,35 @@ ion-menu.md ion-content {
   --padding-bottom: 20px;
 }
 
-
 ion-menu.md ion-list {
   padding: 20px 0;
 }
 
-
 ion-menu.md ion-note {
   margin-bottom: 30px;
 }
-
 
 ion-menu.md ion-list-header,
 ion-menu.md ion-note {
   padding-left: 10px;
 }
 
-
 ion-menu.md ion-list#inbox-list {
   border-bottom: 1px solid var(--ion-background-color-step-150, #d7d8da);
 }
 
-
 ion-menu.md ion-list#inbox-list ion-list-header {
   font-size: 22px;
   font-weight: 600;
-
-
   min-height: 20px;
 }
 
-
 ion-menu.md ion-list#labels-list ion-list-header {
   font-size: 16px;
-
-
   margin-bottom: 18px;
-
-
   color: #757575;
-
-
   min-height: 26px;
 }
-
 
 ion-menu.md ion-item {
   --padding-start: 10px;
@@ -155,42 +128,34 @@ ion-menu.md ion-item {
   border-radius: 4px;
 }
 
-
 ion-menu.md ion-item.selected {
   --background: rgba(var(--ion-color-primary-rgb), 0.14);
 }
-
 
 ion-menu.md ion-item.selected ion-icon {
   color: var(--ion-color-primary);
 }
 
-
 ion-menu.md ion-item ion-icon {
   color: #616e7e;
 }
-
 
 ion-menu.md ion-item ion-label {
   font-weight: 500;
 }
 
-
 ion-menu.ios ion-content {
   --padding-bottom: 20px;
 }
-
 
 ion-menu.ios ion-list {
   padding: 20px 0 0 0;
 }
 
-
 ion-menu.ios ion-note {
   line-height: 24px;
   margin-bottom: 20px;
 }
-
 
 ion-menu.ios ion-item {
   --padding-start: 16px;
@@ -198,22 +163,18 @@ ion-menu.ios ion-item {
   --min-height: 50px;
 }
 
-
 ion-menu.ios ion-item.selected ion-icon {
   color: var(--ion-color-primary);
 }
-
 
 ion-menu.ios ion-item ion-icon {
   font-size: 24px;
   color: #73849a;
 }
 
-
 ion-menu.ios ion-list#labels-list ion-list-header {
   margin-bottom: 8px;
 }
-
 
 ion-menu.ios ion-list-header,
 ion-menu.ios ion-note {
@@ -221,20 +182,15 @@ ion-menu.ios ion-note {
   padding-right: 16px;
 }
 
-
 ion-menu.ios ion-note {
   margin-bottom: 8px;
 }
 
-
 ion-note {
   display: inline-block;
   font-size: 16px;
-
-
   color: var(--ion-color-medium-shade);
 }
-
 
 ion-item.selected {
   --color: var(--ion-color-primary);

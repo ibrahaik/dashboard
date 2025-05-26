@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>🐛 KPI: Bugs por Sprint</ion-card-title>
+      <ion-card-title>Bugs por Sprint</ion-card-title>
       <ion-card-subtitle>Bugs abiertos vs resueltos | Unidad: Número de bugs</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

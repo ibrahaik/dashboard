@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>👥 KPI: Ratio DAU/MAU</ion-card-title>
+      <ion-card-title>Ratio DAU/MAU</ion-card-title>
       <ion-card-subtitle>Usuarios activos diarios/mensuales | Unidad: Ratio (0-1)</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

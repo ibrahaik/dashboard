@@ -7,7 +7,7 @@
         </ion-buttons>
         <ion-title>
           <div class="title-container">
-            <ion-icon :icon="targetOutline" class="title-icon"></ion-icon>
+            <ion-icon :icon="trophyOutline" class="title-icon"></ion-icon>
             <span>Objetivos SMART</span>
           </div>
         </ion-title>
@@ -24,16 +24,11 @@
     
     <ion-content>
       <div class="objectives-container">
-        <!-- Header Section -->
-        <div class="objectives-header">
-          <h1>🎯 Objetivos SMART 2024-2025</h1>
-          <p>Específicos • Medibles • Alcanzables • Relevantes • Temporales</p>
-        </div>
+      
 
         <!-- Business Objectives Section -->
         <div class="section-header business">
-          <h2>📈 Objetivos de Negocio (Externos)</h2>
-          <p>Enfocados en crecimiento, ingresos y satisfacción del cliente</p>
+          <h2>Objetivos de Negocio</h2>
         </div>
 
         <div class="objectives-table-container">
@@ -81,8 +76,7 @@
 
         <!-- Technical Objectives Section -->
         <div class="section-header technical">
-          <h2>🔧 Objetivos Técnicos (Internos)</h2>
-          <p>Enfocados en rendimiento, calidad y experiencia técnica</p>
+          <h2> Objetivos Técnicos </h2>
         </div>
 
         <div class="objectives-table-container">
@@ -128,15 +122,8 @@
           </ion-card>
         </div>
 
-        <!-- Custom Chart Section -->
-        <div class="section-header custom">
-          <h2>📊 Gráfico Personalizado: Usuarios Activos Diarios</h2>
-          <p>Evolución del engagement de usuarios (últimos 30 días)</p>
-        </div>
+      
 
-        <div class="chart-section">
-          <DailyActiveUsersChart />
-        </div>
 
         <!-- Summary Section -->
         <div class="summary-section">
@@ -172,12 +159,11 @@ import {
   IonButtons, IonButton, IonIcon, IonMenuButton 
 } from '@ionic/vue';
 import { 
-  notificationsOutline, personCircleOutline, targetOutline, airplaneOutline,
+  notificationsOutline, personCircleOutline, trophyOutline, airplaneOutline,
   cashOutline, funnelOutline, heartOutline, trendingUpOutline, speedometerOutline,
   peopleOutline, bugOutline, phonePortraitOutline, codeSlashOutline,
   checkmarkCircleOutline, timeOutline, warningOutline
 } from 'ionicons/icons';
-import DailyActiveUsersChart from '../components/custom/DailyActiveUsersChart.vue';
 
 // Business Objectives Data
 const businessObjectives = ref([

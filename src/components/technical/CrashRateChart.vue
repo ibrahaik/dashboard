@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>💥 KPI: Crash Rate por Versión</ion-card-title>
+      <ion-card-title>Crash Rate por Versión</ion-card-title>
       <ion-card-subtitle>Tasa de errores por versión de app | Unidad: Porcentaje (%)</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

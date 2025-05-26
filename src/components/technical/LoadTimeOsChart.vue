@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>📱 KPI: Tiempo de Carga por SO</ion-card-title>
+      <ion-card-title>Tiempo de Carga por SO</ion-card-title>
       <ion-card-subtitle>Comparativa iOS vs Android | Unidad: Milisegundos (ms)</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

@@ -47,12 +47,7 @@ const appPages = [
     iosIcon: pulseOutline,
     mdIcon: pulseSharp,
   },
-  {
-    title: 'KPIs',
-    url: '/kpis',
-    iosIcon: speedometerOutline,
-    mdIcon: speedometerSharp,
-  },
+  
   {
     title: 'Objetivos SMART',
     url: '/objetivos',
@@ -61,10 +56,9 @@ const appPages = [
   },
 ];
 
-
-
+const selectedIndex = ref(0);
 const currentPath = computed(() => route.path);
-const selectedIndex = ref(appPages.findIndex(page => page.url === currentPath.value));
+
 
 watch(currentPath, () => {
   selectedIndex.value = appPages.findIndex(page => page.url === currentPath.value);

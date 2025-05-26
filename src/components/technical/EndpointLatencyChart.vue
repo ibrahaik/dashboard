@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>📡 KPI: Latencia en Tiempo Real</ion-card-title>
+      <ion-card-title>Latencia en Tiempo Real</ion-card-title>
       <ion-card-subtitle>Latencia promedio APIs (actualización cada 2s) | Unidad: Milisegundos (ms)</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

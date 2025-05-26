@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>💰 KPI: ARPU vs CPA</ion-card-title>
+      <ion-card-title>ARPU vs CPA</ion-card-title>
       <ion-card-subtitle>Ingreso medio vs Coste por adquisición | Unidad: Euros (€)</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

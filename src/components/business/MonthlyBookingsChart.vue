@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>📊 KPI: Reservas Mensuales</ion-card-title>
+      <ion-card-title>Reservas Mensuales</ion-card-title>
       <ion-card-subtitle>Evolución de reservas por mes | Unidad: Número de reservas</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

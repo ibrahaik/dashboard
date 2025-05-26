@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>🎯 KPI: Tasa de Conversión</ion-card-title>
+      <ion-card-title>Tasa de Conversión</ion-card-title>
       <ion-card-subtitle>Embudo de compra | Unidad: Porcentaje (%)</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

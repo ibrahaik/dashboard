@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>💰 KPI: Ingresos Mensuales</ion-card-title>
+      <ion-card-title>Ingresos Mensuales</ion-card-title>
       <ion-card-subtitle>Evolución de ingresos por mes | Unidad: Euros (€)</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

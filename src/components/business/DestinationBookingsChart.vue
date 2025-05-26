@@ -1,7 +1,7 @@
 <template>
   <ion-card class="chart-card">
     <ion-card-header>
-      <ion-card-title>🌍 KPI: % Reservas por Destino</ion-card-title>
+      <ion-card-title>% Reservas por Destino</ion-card-title>
       <ion-card-subtitle>Distribución de destinos populares | Unidad: Porcentaje (%)</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>

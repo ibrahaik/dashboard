@@ -23,7 +23,6 @@
   const chartContainer = ref(null);
   let chart = null;
   
-  // Datos de tiempo de carga por SO y pantalla
   let loadTimeData = {
     indicator: [
       { name: 'Inicio', max: 1000 },
@@ -112,7 +111,6 @@
     };
     chart.setOption(option);
     
-    // Hacer responsivo
     const resizeHandler = () => {
       if (chart) {
         chart.resize();

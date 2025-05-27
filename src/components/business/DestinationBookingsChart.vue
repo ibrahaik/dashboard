@@ -23,7 +23,6 @@ echarts.use([PieChart, TooltipComponent, LegendComponent, CanvasRenderer]);
 const chartContainer = ref(null);
 let chart = null;
 
-// Datos de reservas por destino
 const destinationData = [
   { value: 28.5, name: 'París' },
   { value: 22.3, name: 'Roma' },
@@ -99,7 +98,6 @@ onMounted(() => {
   
   chart.setOption(option);
   
-  // Hacer responsivo
   const resizeHandler = () => {
     if (chart) {
       chart.resize();

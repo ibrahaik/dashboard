@@ -15,7 +15,6 @@ import { onMounted, onUnmounted } from 'vue';
 import { IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent } from '@ionic/vue';
 import ApexCharts from 'apexcharts';
 
-// Datos del embudo de conversión
 const funnelData = [
   { stage: 'Visitantes', users: 100000, percentage: 100 },
   { stage: 'Búsquedas', users: 68000, percentage: 68 },

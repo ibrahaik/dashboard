@@ -33,7 +33,6 @@
   let chart = null;
   let updateInterval = null;
   
-  // Datos iniciales (últimos 60 segundos)
   const timeLabels = Array(60).fill('').map((_, i) => {
     const time = new Date();
     time.setSeconds(time.getSeconds() - (59 - i));
@@ -41,19 +40,15 @@
   });
   
   const latencyData = Array(60).fill(0).map(() => Math.floor(Math.random() * 80) + 90);
-  const targetLine = Array(60).fill(120); // Línea roja de objetivo
+  const targetLine = Array(60).fill(120); 
   
-  // Función para actualizar datos en tiempo real
   const updateRealtimeData = () => {
-    // Simular nueva latencia
     const newLatency = Math.floor(Math.random() * 100) + 80;
     currentLatency.value = newLatency;
     
-    // Actualizar datos del gráfico
     latencyData.shift();
     latencyData.push(newLatency);
     
-    // Actualizar etiqueta de tiempo actual
     const currentTime = new Date().toLocaleTimeString('es-ES', { hour12: false });
     timeLabels.shift();
     timeLabels.push(currentTime);
@@ -125,7 +120,7 @@
         },
         axisLabel: {
           color: '#666',
-          interval: 9 // Mostrar cada 10 segundos
+          interval: 9 
         }
       },
       yAxis: {
@@ -191,13 +186,10 @@
     
     chart.setOption(option);
     
-    // Inicializar valor actual
     currentLatency.value = latencyData[latencyData.length - 1];
     
-    // Iniciar actualización en tiempo real cada 2 segundos
     updateInterval = setInterval(updateRealtimeData, 2000);
     
-    // Hacer responsivo
     const resizeHandler = () => {
       if (chart) {
         chart.resize();

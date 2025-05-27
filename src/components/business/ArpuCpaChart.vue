@@ -15,7 +15,6 @@ import { onMounted, onUnmounted } from 'vue';
 import { IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent } from '@ionic/vue';
 import ApexCharts from 'apexcharts';
 
-// Datos ARPU vs CPA por trimestre
 const arpuCpaData = {
   categories: ['Q1 2024', 'Q2 2024', 'Q3 2024', 'Q4 2024'],
   arpu: [142, 156, 168, 175],

@@ -31,14 +31,12 @@ import { onMounted, onUnmounted, computed } from 'vue';
 import { IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent } from '@ionic/vue';
 import ApexCharts from 'apexcharts';
 
-// Datos de bugs por sprint
 const bugsData = {
   categories: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5', 'Sprint 6'],
   opened: [23, 18, 31, 15, 22, 19],
   resolved: [19, 25, 28, 20, 26, 24]
 };
 
-// Computed properties para estadísticas
 const totalOpened = computed(() => bugsData.opened.reduce((sum, val) => sum + val, 0));
 const totalResolved = computed(() => bugsData.resolved.reduce((sum, val) => sum + val, 0));
 const resolutionRate = computed(() => Math.round((totalResolved.value / (totalOpened.value + totalResolved.value)) * 100));
@@ -46,7 +44,6 @@ const resolutionRate = computed(() => Math.round((totalResolved.value / (totalOp
 let chart = null;
 
 onMounted(() => {
-  // Cambiar a gráfico radial/circular
   const options = {
     series: bugsData.categories.map((sprint, index) => {
       const total = bugsData.opened[index] + bugsData.resolved[index];

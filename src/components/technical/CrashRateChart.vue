@@ -18,7 +18,6 @@
   const chartCanvas = ref(null);
   let chart = null;
   
-  // Datos de crash rate por versión
   const crashData = {
     labels: ['v1.5.0', 'v1.6.0', 'v1.7.0', 'v1.8.0', 'v1.9.0', 'v2.0.0'],
     datasets: [{

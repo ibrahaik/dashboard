@@ -127,7 +127,7 @@
 
         <!-- Summary Section -->
         <div class="summary-section">
-          <h3>📋 Resumen de Objetivos</h3>
+          <h3>Resumen de Objetivos</h3>
           <div class="summary-stats">
             <div class="stat-item success">
               <div class="stat-number">{{ completedObjectives }}</div>

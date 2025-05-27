@@ -5,14 +5,40 @@
       <ion-card-subtitle>Usuarios activos diarios/mensuales | Unidad: Ratio (0-1)</ion-card-subtitle>
     </ion-card-header>
     <ion-card-content>
+      <div class="chart-controls">
+        <div class="current-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ currentRatio.toFixed(3) }}</div>
+            <div class="stat-label">Ratio Actual</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ averageRatio.toFixed(3) }}</div>
+            <div class="stat-label">Promedio 30d</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" :class="{ 'success': trendDirection > 0, 'danger': trendDirection < 0 }">
+              {{ trendDirection > 0 ? '+' : '' }}{{ (trendDirection * 100).toFixed(1) }}%
+            </div>
+            <div class="stat-label">Tendencia</div>
+          </div>
+        </div>
+      </div>
+      
       <div class="canvas-container">
-        <svg ref="svgChart" width="100%" height="100%" viewBox="0 0 800 300"></svg>
+        <canvas 
+          ref="chartCanvas" 
+          width="800" 
+          height="300"
+          @mousemove="handleMouseMove"
+          @mouseleave="handleMouseLeave"
+        ></canvas>
+        
         <div v-if="hoveredPoint" class="tooltip" :style="tooltipStyle">
-          <div class="tooltip-title">{{ hoveredPoint.date }}</div>
+          <div class="tooltip-title">{{ hoveredPoint.fullDate }}</div>
           <div class="tooltip-value">Ratio: {{ hoveredPoint.ratio.toFixed(3) }}</div>
           <div class="tooltip-details">
-            <div>DAU: {{ hoveredPoint.dau.toLocaleString() }}</div>
-            <div>MAU: {{ hoveredPoint.mau.toLocaleString() }}</div>
+            <div>DAU: {{ formatNumber(hoveredPoint.dau) }}</div>
+            <div>MAU: {{ formatNumber(hoveredPoint.mau) }}</div>
           </div>
         </div>
       </div>
@@ -21,17 +47,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent } from '@ionic/vue';
 
-const svgChart = ref(null);
+const chartCanvas = ref(null);
 const hoveredPoint = ref(null);
-const tooltipStyle = ref({
-  left: '0px',
-  top: '0px'
-});
+const tooltipStyle = ref({ left: '0px', top: '0px' });
 
-// Datos DAU/MAU de los últimos 30 días
+// Generar datos DAU/MAU de los últimos 30 días
 const generateDauMauData = () => {
   const data = [];
   const today = new Date();
@@ -40,242 +63,307 @@ const generateDauMauData = () => {
     const date = new Date();
     date.setDate(today.getDate() - i);
     
+    // Simular datos realistas
     const mau = 450000 + Math.random() * 50000;
-    const dau = mau * (0.15 + Math.random() * 0.1); // Ratio típico 15-25%
+    const baseRatio = 0.18 + Math.random() * 0.06; // Ratio típico 18-24%
+    const dau = mau * baseRatio;
     
     data.push({
       date: date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }),
+      fullDate: date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }),
       dau: Math.round(dau),
       mau: Math.round(mau),
-      ratio: dau / mau
+      ratio: dau / mau,
+      x: 0,
+      y: 0
     });
   }
   
   return data;
 };
 
-const data = generateDauMauData();
-let pointCoordinates = [];
+const data = ref(generateDauMauData());
 
-// Función para dibujar el gráfico SVG personalizado
+// Computed properties
+const currentRatio = computed(() => data.value[data.value.length - 1]?.ratio || 0);
+const averageRatio = computed(() => {
+  const sum = data.value.reduce((acc, item) => acc + item.ratio, 0);
+  return sum / data.value.length;
+});
+const trendDirection = computed(() => {
+  if (data.value.length < 8) return 0;
+  const recent = data.value.slice(-7).reduce((acc, item) => acc + item.ratio, 0) / 7;
+  const previous = data.value.slice(-14, -7).reduce((acc, item) => acc + item.ratio, 0) / 7;
+  return (recent - previous) / previous;
+});
+
+let animationId = null;
+let animationProgress = 0;
+
+// Función para dibujar el gráfico de barras
 const drawChart = () => {
-  const svg = svgChart.value;
-  if (!svg) return;
+  const canvas = chartCanvas.value;
+  if (!canvas) return;
   
-  // Limpiar SVG
-  svg.innerHTML = '';
+  const ctx = canvas.getContext('2d');
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
   
-  const width = 800;
-  const height = 300;
-  const padding = { top: 20, right: 40, bottom: 40, left: 60 };
+  // Ajustar canvas para alta resolución
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.scale(dpr, dpr);
+  
+  const width = rect.width;
+  const height = rect.height;
+  const padding = { top: 30, right: 60, bottom: 50, left: 70 };
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
   
-  // Escalas
-  const maxRatio = Math.max(...data.map(d => d.ratio));
-  const minRatio = Math.min(...data.map(d => d.ratio));
-  const scaleX = (index) => padding.left + (index / (data.length - 1)) * chartWidth;
-  const scaleY = (value) => height - padding.bottom - ((value - minRatio) / (maxRatio - minRatio)) * chartHeight;
+  // Limpiar canvas
+  ctx.clearRect(0, 0, width, height);
   
-  // Crear gradiente
-  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-  const gradient = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
-  gradient.setAttribute('id', 'areaGradient');
-  gradient.setAttribute('x1', '0%');
-  gradient.setAttribute('y1', '0%');
-  gradient.setAttribute('x2', '0%');
-  gradient.setAttribute('y2', '100%');
+  // Configurar estilos
+  ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
   
-  const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-  stop1.setAttribute('offset', '0%');
-  stop1.setAttribute('stop-color', '#ffcc00');
-  stop1.setAttribute('stop-opacity', '0.7');
+  // Calcular escalas
+  const maxRatio = Math.max(...data.value.map(d => d.ratio));
+  const minRatio = Math.min(...data.value.map(d => d.ratio));
+  const ratioRange = maxRatio - minRatio;
+  const targetRatio = 0.22; // Objetivo del 22%
   
-  const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-  stop2.setAttribute('offset', '100%');
-  stop2.setAttribute('stop-color', '#ffcc00');
-  stop2.setAttribute('stop-opacity', '0.1');
+  const barWidth = chartWidth / data.value.length * 0.8;
+  const barSpacing = chartWidth / data.value.length * 0.2;
   
-  gradient.appendChild(stop1);
-  gradient.appendChild(stop2);
-  defs.appendChild(gradient);
-  svg.appendChild(defs);
+  const scaleX = (index) => padding.left + (index * (barWidth + barSpacing)) + barSpacing / 2;
+  const scaleY = (ratio) => padding.top + ((maxRatio - ratio) / ratioRange) * chartHeight;
   
-  // Líneas de cuadrícula
+  // Dibujar grid horizontal
+  ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+  ctx.lineWidth = 1;
   for (let i = 0; i <= 5; i++) {
     const y = padding.top + (chartHeight / 5) * i;
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-    line.setAttribute('x1', padding.left);
-    line.setAttribute('y1', y);
-    line.setAttribute('x2', width - padding.right);
-    line.setAttribute('y2', y);
-    line.setAttribute('stroke', 'rgba(200, 200, 200, 0.3)');
-    line.setAttribute('stroke-width', '1');
-    svg.appendChild(line);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, y);
+    ctx.lineTo(width - padding.right, y);
+    ctx.stroke();
     
     // Etiquetas Y
-    const value = maxRatio - (i / 5) * (maxRatio - minRatio);
-    const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    text.setAttribute('x', padding.left - 10);
-    text.setAttribute('y', y + 4);
-    text.setAttribute('text-anchor', 'end');
-    text.setAttribute('fill', '#666');
-    text.setAttribute('font-size', '12');
-    text.textContent = value.toFixed(3);
-    svg.appendChild(text);
+    const ratio = maxRatio - (i / 5) * ratioRange;
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'right';
+    ctx.fillText(ratio.toFixed(3), padding.left - 10, y);
   }
   
-  // Crear path para el área
-  let pathData = `M ${scaleX(0)} ${height - padding.bottom}`;
-  
-  pointCoordinates = [];
-  data.forEach((point, index) => {
-    const x = scaleX(index);
-    const y = scaleY(point.ratio);
+  // Dibujar línea de objetivo
+  const targetY = scaleY(targetRatio);
+  if (targetY >= padding.top && targetY <= height - padding.bottom) {
+    ctx.strokeStyle = '#ff4757';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 4]);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, targetY);
+    ctx.lineTo(width - padding.right, targetY);
+    ctx.stroke();
     
-    if (index === 0) {
-      pathData += ` L ${x} ${y}`;
-    } else {
-      pathData += ` L ${x} ${y}`;
-    }
-    
-    pointCoordinates.push({ x, y, data: point });
-  });
+    // Etiqueta objetivo
+    ctx.fillStyle = '#ff4757';
+    ctx.textAlign = 'left';
+    ctx.font = 'bold 10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillText('Objetivo: 0.220', width - padding.right + 5, targetY);
+  }
+  ctx.setLineDash([]);
   
-  pathData += ` L ${scaleX(data.length - 1)} ${height - padding.bottom} Z`;
-  
-  // Dibujar área
-  const area = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  area.setAttribute('d', pathData);
-  area.setAttribute('fill', 'url(#areaGradient)');
-  svg.appendChild(area);
-  
-  // Dibujar línea
-  let lineData = '';
-  data.forEach((point, index) => {
-    const x = scaleX(index);
-    const y = scaleY(point.ratio);
-    
-    if (index === 0) {
-      lineData += `M ${x} ${y}`;
-    } else {
-      lineData += ` L ${x} ${y}`;
-    }
-  });
-  
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  line.setAttribute('d', lineData);
-  line.setAttribute('stroke', '#ffcc00');
-  line.setAttribute('stroke-width', '3');
-  line.setAttribute('fill', 'none');
-  svg.appendChild(line);
-  
-  // Dibujar puntos
-  pointCoordinates.forEach((point) => {
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', point.x);
-    circle.setAttribute('cy', point.y);
-    circle.setAttribute('r', '4');
-    circle.setAttribute('fill', '#ffcc00');
-    circle.setAttribute('stroke', '#fff');
-    circle.setAttribute('stroke-width', '2');
-    svg.appendChild(circle);
-  });
-  
-  // Etiquetas X (cada 5 días)
-  data.forEach((point, index) => {
-    if (index % 5 === 0) {
+  // Dibujar barras con animación
+  data.value.forEach((point, index) => {
+    const progress = Math.min(1, Math.max(0, (animationProgress - index * 0.02)));
+    if (progress > 0) {
       const x = scaleX(index);
-      const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-      text.setAttribute('x', x);
-      text.setAttribute('y', height - padding.bottom + 20);
-      text.setAttribute('text-anchor', 'middle');
-      text.setAttribute('fill', '#666');
-      text.setAttribute('font-size', '11');
-      text.textContent = point.date;
-      svg.appendChild(text);
+      const yTop = scaleY(point.ratio);
+      const yBottom = height - padding.bottom;
+      const animatedHeight = (yBottom - yTop) * progress;
+      const animatedYTop = yBottom - animatedHeight;
+      
+      // Actualizar coordenadas para hover
+      point.x = x + barWidth / 2;
+      point.y = yTop;
+      point.barX = x;
+      point.barY = animatedYTop;
+      point.barWidth = barWidth;
+      point.barHeight = animatedHeight;
+      
+      // Crear gradiente para cada barra
+      const gradient = ctx.createLinearGradient(0, animatedYTop, 0, yBottom);
+      
+      // Color basado en si está por encima o debajo del objetivo
+      if (point.ratio >= targetRatio) {
+        gradient.addColorStop(0, '#ffcc00'); // Amarillo brillante
+        gradient.addColorStop(1, '#ffa500'); // Naranja dorado
+      } else if (point.ratio >= targetRatio * 0.9) {
+        gradient.addColorStop(0, '#ffcc00'); // Amarillo
+        gradient.addColorStop(1, '#ffeb3b'); // Amarillo claro
+      } else {
+        gradient.addColorStop(0, '#ffd54f'); // Amarillo pálido
+        gradient.addColorStop(1, '#fff176'); // Amarillo muy claro
+      }
+      
+      // Dibujar barra con bordes redondeados
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.roundRect(x, animatedYTop, barWidth, animatedHeight, [4, 4, 0, 0]);
+      ctx.fill();
+      
+      // Borde de la barra
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      
+      // Agregar brillo en la parte superior
+      if (animatedHeight > 10) {
+        const shineGradient = ctx.createLinearGradient(0, animatedYTop, 0, animatedYTop + 20);
+        shineGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        shineGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        
+        ctx.fillStyle = shineGradient;
+        ctx.beginPath();
+        ctx.roundRect(x, animatedYTop, barWidth, Math.min(20, animatedHeight), [4, 4, 0, 0]);
+        ctx.fill();
+      }
+      
+      // Valor en la parte superior de la barra (solo para barras altas)
+      if (animatedHeight > 30 && index % 3 === 0) {
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(point.ratio.toFixed(3), x + barWidth / 2, animatedYTop - 8);
+      }
     }
   });
   
-  // Título del eje Y
-  const yTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  yTitle.setAttribute('x', 20);
-  yTitle.setAttribute('y', height / 2);
-  yTitle.setAttribute('text-anchor', 'middle');
-  yTitle.setAttribute('fill', '#666');
-  yTitle.setAttribute('font-size', '12');
-  yTitle.setAttribute('font-weight', 'bold');
-  yTitle.setAttribute('transform', `rotate(-90, 20, ${height / 2})`);
-  yTitle.textContent = 'Ratio DAU/MAU';
-  svg.appendChild(yTitle);
+  // Etiquetas X (mostrar cada 3 días para evitar solapamiento)
+  ctx.fillStyle = '#666';
+  ctx.textAlign = 'center';
+  ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  data.value.forEach((point, index) => {
+    if (index % 3 === 0 || index === data.value.length - 1) {
+      const x = scaleX(index) + barWidth / 2;
+      ctx.fillText(point.date, x, height - padding.bottom + 20);
+    }
+  });
   
-  // Título del eje X
-  const xTitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  xTitle.setAttribute('x', width / 2);
-  xTitle.setAttribute('y', height - 5);
-  xTitle.setAttribute('text-anchor', 'middle');
-  xTitle.setAttribute('fill', '#666');
-  xTitle.setAttribute('font-size', '12');
-  xTitle.setAttribute('font-weight', 'bold');
-  xTitle.textContent = 'Fecha';
-  svg.appendChild(xTitle);
+  // Títulos de ejes
+  ctx.fillStyle = '#333';
+  ctx.font = 'bold 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+  
+  // Título eje Y
+  ctx.save();
+  ctx.translate(20, height / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.textAlign = 'center';
+  ctx.fillText('Ratio DAU/MAU', 0, 0);
+  ctx.restore();
+  
+  // Título eje X
+  ctx.textAlign = 'center';
+  ctx.fillText('Fecha', width / 2, height - 10);
 };
 
-// Función para manejar el movimiento del ratón
+// Manejar hover para barras
 const handleMouseMove = (event) => {
-  const svg = svgChart.value;
-  if (!svg) return;
+  const canvas = chartCanvas.value;
+  if (!canvas) return;
   
-  const rect = svg.getBoundingClientRect();
-  const mouseX = (event.clientX - rect.left) * (800 / rect.width);
-  const mouseY = (event.clientY - rect.top) * (300 / rect.height);
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = event.clientX - rect.left;
+  const mouseY = event.clientY - rect.top;
   
-  // Encontrar el punto más cercano
-  let closestPoint = null;
-  let minDistance = Infinity;
+  // Encontrar barra más cercana
+  let hoveredBar = null;
   
-  pointCoordinates.forEach(point => {
-    const distance = Math.sqrt(Math.pow(mouseX - point.x, 2) + Math.pow(mouseY - point.y, 2));
-    if (distance < 20 && distance < minDistance) {
-      minDistance = distance;
-      closestPoint = point;
+  data.value.forEach(point => {
+    if (point.barX && point.barY && point.barWidth && point.barHeight) {
+      // Verificar si el mouse está sobre la barra
+      if (mouseX >= point.barX && 
+          mouseX <= point.barX + point.barWidth &&
+          mouseY >= point.barY && 
+          mouseY <= point.barY + point.barHeight) {
+        hoveredBar = point;
+      }
     }
   });
   
-  if (closestPoint) {
-    hoveredPoint.value = closestPoint.data;
+  if (hoveredBar) {
+    hoveredPoint.value = hoveredBar;
     tooltipStyle.value = {
-      left: `${(closestPoint.x / 800) * 100}%`,
-      top: `${(closestPoint.y / 300) * 100}%`
+      left: `${hoveredBar.barX + hoveredBar.barWidth / 2}px`,
+      top: `${hoveredBar.barY - 10}px`
     };
   } else {
     hoveredPoint.value = null;
   }
 };
 
-onMounted(() => {
-  drawChart();
-  
-  const svg = svgChart.value;
-  if (svg) {
-    svg.addEventListener('mousemove', handleMouseMove);
-    svg.addEventListener('mouseleave', () => {
-      hoveredPoint.value = null;
-    });
+const handleMouseLeave = () => {
+  hoveredPoint.value = null;
+};
+
+// Función de formato
+const formatNumber = (num) => {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1) + 'M';
+  } else if (num >= 1000) {
+    return (num / 1000).toFixed(0) + 'K';
   }
-  
-  // Manejar cambios de tamaño
-  const resizeObserver = new ResizeObserver(() => {
+  return num.toLocaleString('es-ES');
+};
+
+// Función de animación
+const animate = () => {
+  if (animationProgress < 1.2) {
+    animationProgress += 0.03;
     drawChart();
+    animationId = requestAnimationFrame(animate);
+  }
+};
+
+// Agregar función roundRect si no está disponible
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radii) {
+    this.beginPath();
+    this.moveTo(x + radii[0], y);
+    this.lineTo(x + width - radii[1], y);
+    this.quadraticCurveTo(x + width, y, x + width, y + radii[1]);
+    this.lineTo(x + width, y + height - radii[2]);
+    this.quadraticCurveTo(x + width, y + height, x + width - radii[2], y + height);
+    this.lineTo(x + radii[3], y + height);
+    this.quadraticCurveTo(x, y + height, x, y + height - radii[3]);
+    this.lineTo(x, y + radii[0]);
+    this.quadraticCurveTo(x, y, x + radii[0], y);
+    this.closePath();
+  };
+}
+
+onMounted(() => {
+  // Iniciar animación
+  animationId = requestAnimationFrame(animate);
+  
+  // Manejar redimensionamiento
+  const resizeObserver = new ResizeObserver(() => {
+    setTimeout(() => {
+      animationProgress = 1.5; // Saltar animación en resize
+      drawChart();
+    }, 100);
   });
   
-  if (svg.parentElement) {
-    resizeObserver.observe(svg.parentElement);
+  if (chartCanvas.value) {
+    resizeObserver.observe(chartCanvas.value.parentElement);
   }
   
   onUnmounted(() => {
-    if (svg) {
-      svg.removeEventListener('mousemove', handleMouseMove);
+    if (animationId) {
+      cancelAnimationFrame(animationId);
     }
     resizeObserver.disconnect();
   });
@@ -286,32 +374,76 @@ onMounted(() => {
 .chart-card {
   height: 100%;
   border-top: 3px solid #ffcc00;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
 ion-card-content {
   height: 300px;
+  position: relative;
+}
+
+.chart-controls {
+  margin-bottom: 1rem;
+}
+
+.current-stats {
+  display: flex;
+  justify-content: space-around;
+  background: linear-gradient(135deg, rgba(255, 204, 0, 0.1), rgba(255, 211, 51, 0.1));
+  border-radius: 12px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #ffcc00;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value.success {
+  color: #1dd1a1;
+}
+
+.stat-value.danger {
+  color: #ff6b6b;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 600;
 }
 
 .canvas-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 220px;
 }
 
-svg {
+canvas {
+  width: 100%;
+  height: 100%;
   cursor: crosshair;
+  border-radius: 8px;
 }
 
 .tooltip {
   position: absolute;
   background-color: rgba(255, 255, 255, 0.95);
-  border: 1px solid #ffcc00;
+  border: 2px solid #ffcc00;
   border-radius: 8px;
   padding: 8px 12px;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 10;
-  min-width: 120px;
+  min-width: 140px;
   transform: translate(-50%, -100%);
   margin-top: -10px;
 }
@@ -320,16 +452,42 @@ svg {
   font-weight: bold;
   margin-bottom: 4px;
   color: #333;
+  font-size: 0.9rem;
 }
 
 .tooltip-value {
   color: #ffcc00;
   font-weight: bold;
   margin-bottom: 4px;
+  font-size: 1rem;
 }
 
 .tooltip-details {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #666;
+}
+
+.tooltip-details div {
+  margin-bottom: 2px;
+}
+
+@media (max-width: 768px) {
+  ion-card-content {
+    height: 280px;
+  }
+  
+  .canvas-container {
+    height: 200px;
+  }
+  
+  .current-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+  
+  .stat-value {
+    font-size: 1rem;
+  }
 }
 </style>

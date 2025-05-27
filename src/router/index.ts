@@ -14,10 +14,7 @@ const routes: Array<RouteRecordRaw> = [
     path: "/tecnico",
     component: () => import("../views/TechnicalDashboard.vue"),
   },
-  {
-    path: "/kpis",
-    component: () => import("../views/KPIDashboard.vue"),
-  },
+
   {
     path: "/objetivos",
     component: () => import("../views/SmartObjectives.vue"),

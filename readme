@@ -1,0 +1,37 @@
+Dashboard Vue es una aplicación de visualización de datos desarrollada con Vue 3, Ionic Vue y TypeScript. Ofrece una experiencia responsiva y adaptable tanto para dispositivos móviles como de escritorio gracias a la integración con Capacitor.
+
+El objetivo principal de la app es proporcionar una visión clara y visual de métricas clave del negocio y del área técnica, incluyendo:
+
+Indicadores de negocio: ARPU vs CPA, embudo de conversión, reservas mensuales, ingresos en tiempo real, distribución por destinos.
+
+Métricas técnicas: errores por sprint, ratio DAU/MAU, tasa de fallos, latencia de endpoints, carga por sistema operativo.
+
+Objetivos SMART: vista dedicada al seguimiento de objetivos estratégicos definidos por la organización.
+
+Tecnologías utilizadas
+Vue 3 + TypeScript: framework principal y tipado estático.
+
+Ionic Vue: componentes móviles y navegación.
+
+Capacitor: compatibilidad con plataformas móviles (iOS/Android).
+
+Charting libraries:
+
+ApexCharts, Chart.js y ECharts para gráficos interactivos.
+
+Vite: bundler y servidor de desarrollo.
+
+Cypress: testing end-to-end.
+
+Vitest: testing unitario.
+
+ESLint: análisis estático de código.
+
+Estructura principal
+/src/components: componentes reutilizables para gráficos (negocio, técnico, personalizados).
+
+/src/views: vistas principales de la app.
+
+/tests: pruebas unitarias y E2E.
+
+capacitor.config.ts: configuración multiplataforma.
